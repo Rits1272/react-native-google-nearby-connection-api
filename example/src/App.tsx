@@ -1,22 +1,19 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-nearby-connections';
+import { StyleSheet, View, Text, NativeModules } from 'react-native';
+
+const { NearbyConnection } = NativeModules;
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
-
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Text>Hey Dhananjay Bro :)</Text>
     </View>
   );
 }
 
+// Try to use styled components here for defining the styles.
+// https://styled-components.com/
 const styles = StyleSheet.create({
   container: {
     flex: 1,
