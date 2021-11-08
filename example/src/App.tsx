@@ -1,9 +1,59 @@
 import * as React from 'react';
-import { StyleSheet, View, Text, NativeModules, Button } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid } from 'react-native';
 
 const { NearbyChat } = NativeModules;
 
 export default function App() {
+
+  useEffect(() => {
+    requestAccessFineLocationPermission();
+    requestAccessCoarseLocationPermission();
+  });
+
+  const requestAccessFineLocationPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: "Asking for access to Fine Location",
+          message:
+            "Asking for access to Fine Location",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK"
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("You can use the Fine Location");
+      } else {
+        console.log("Fine Location permission denied");
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+  
+  const requestAccessCoarseLocationPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        {
+          title: "Asking for access to Coarse Location",
+          message:
+            "Asking for access to Coarse Location",
+          buttonNegative: "Cancel",
+          buttonPositive: "OK"
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("You can use the Coarse Location");
+      } else {
+        console.log("Coarse Location permission denied");
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
 
   const OnPressAdvertise = () => {
     NearbyChat.startAdvertising("My-Phone");
