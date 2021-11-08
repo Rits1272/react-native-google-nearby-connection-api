@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid, TextInput } from 'react-native';
+import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid, TextInput, DeviceEventEmitter } from 'react-native';
 
 const { NearbyChat } = NativeModules;
 
@@ -12,6 +12,12 @@ export default function App() {
   });
 
   const [deviceName, setDeviceName] = useState('');
+  const [endpoints, setEndpoints] = useState([]);
+
+  const getEndpoints = (event) => {
+    setEndpoints(event);
+    console.log(endpoints);
+  };
 
   const requestAccessFineLocationPermission = async () => {
     try {
@@ -59,11 +65,17 @@ export default function App() {
 
   const OnPressAdvertise = () => {
     NearbyChat.startAdvertising(deviceName);
+    console.log("Advertise");
+    console.log(endpoints);
   };
 
   const OnPressDiscover = () => {
     NearbyChat.startDiscovery(deviceName);
+    console.log("Discover");
+    console.log(endpoints);
   };
+
+  DeviceEventEmitter.addListener("endpoints", getEndpoints);
 
   return (
     <View style={styles.container}>
@@ -87,8 +99,18 @@ export default function App() {
         accessibilityLabel="Learn more about this purple button"
       />
       <View>
-        <Text></Text>
-      </View>
+        <Text>Available Devices</Text>
+        {
+          (endpoints.length===0)?<Text>No devices Available</Text>:
+          <View>
+            {
+              endpoints.map((endpoint, i) => (
+                <Text key={i}>{endpoint}</Text>
+              ))
+            }
+          </View>
+        }
+    </View>
     </View>
   );
 }
