@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid, TextInput, DeviceEventEmitter } from 'react-native';
+import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid, TextInput, DeviceEventEmitter, CheckBox } from 'react-native';
 
 const { NearbyChat } = NativeModules;
 
@@ -13,6 +13,8 @@ export default function App() {
 
   const [deviceName, setDeviceName] = useState('');
   const [endpoints, setEndpoints] = useState([]);
+  const [isSelected, setSelection] = useState(false);
+  const [selectedDevices, selectDevice] = useState([]);
 
   const getEndpoints = (event) => {
     setEndpoints(event);
@@ -40,7 +42,7 @@ export default function App() {
       console.warn(err);
     }
   };
-  
+
   const requestAccessCoarseLocationPermission = async () => {
     try {
       const granted = await PermissionsAndroid.request(
@@ -75,7 +77,25 @@ export default function App() {
     console.log(endpoints);
   };
 
+  const receiveMessage = async () => {
+    const msg = await NearbyChat.getMessage();
+    console.log("This is the msg", msg);
+  }
+
+  const sendMessageToSelectedDevices = () => {
+    if(selectedDevices.length>0){
+        selectedDevices.map((device) => {
+          NearbyChat.sendMessage(device.split("_")[0], "HI there from Me!");
+          console.log("Message sent!");
+        })
+    }
+    else {
+        console.log("No device selected");
+    }
+  }
+
   DeviceEventEmitter.addListener("endpoints", getEndpoints);
+  DeviceEventEmitter.addListener("message", receiveMessage);
 
   return (
     <View style={styles.container}>
@@ -101,17 +121,39 @@ export default function App() {
       <View>
         <Text>Available Devices</Text>
         {
-          (endpoints.length===0)?<Text>No devices Available</Text>:
-          <View>
-            {
-              endpoints.map((endpoint, i) => (
-                <Text key={i}>{endpoint}</Text>
+          (endpoints.length === 0) ? <Text>No devices Available</Text> :
+            <View>
+              {
+                endpoints.map((endpoint, i) => (
+                <View>
+                <CheckBox
+                  value={isSelected}
+                  onValueChange={() => {
+                    setSelection(!isSelected);
+                    if (isSelected){
+                      selectDevice([...selectedDevices, endpoint]);
+                    } else {
+                      selectDevice(selectedDevices.filter((device) => { 
+                        return device !== endpoint; 
+                      }));
+                    }
+                    console.log(selectedDevices);
+                  }}
+                />
+                  <Text key={i}>{endpoint}</Text>
+                </View>
               ))
             }
-          </View>
+      </View>
         }
     </View>
-    </View>
+    <Button
+        onPress={sendMessageToSelectedDevices}
+        title="Send Message"
+        color="#841584"
+        accessibilityLabel="Learn more about this purple button"
+      />
+    </View >
   );
 }
 
