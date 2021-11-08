@@ -1,4 +1,4 @@
-package com.example;
+package com.example.reactnativenearbyconnections;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.NativeModule;

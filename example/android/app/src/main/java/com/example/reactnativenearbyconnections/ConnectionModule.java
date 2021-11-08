@@ -1,4 +1,4 @@
-package com.example;
+package com.example.reactnativenearbyconnections;
 
 import androidx.annotation.NonNull;
 import com.facebook.react.bridge.Arguments;
@@ -283,6 +283,6 @@ public class ConnectionModule extends ReactContextBaseJavaModule {
 
     // React-Native module name
     public String getName() {
-        return "NearbyConnection";
+        return "NearbyChat";
     }
 }

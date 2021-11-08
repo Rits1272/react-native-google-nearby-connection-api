@@ -1,16 +1,16 @@
 import * as React from 'react';
 import { StyleSheet, View, Text, NativeModules, Button } from 'react-native';
 
-const { NearbyConnection } = NativeModules;
+const { NearbyChat } = NativeModules;
 
 export default function App() {
 
   const OnPressAdvertise = () => {
-    NearbyConnection.startAdvertising("My-Phone");
+    NearbyChat.startAdvertising("My-Phone");
   };
 
   const OnPressDiscover = () => {
-    NearbyConnection.startDiscovery("Your-Phone");
+    NearbyChat.startDiscovery("Your-Phone");
   };
 
   return (
