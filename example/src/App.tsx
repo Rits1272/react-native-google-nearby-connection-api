@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useEffect } from 'react';
-import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid, TextInput } from 'react-native';
 
 const { NearbyChat } = NativeModules;
 
@@ -10,6 +10,8 @@ export default function App() {
     requestAccessFineLocationPermission();
     requestAccessCoarseLocationPermission();
   });
+
+  const [deviceName, setDeviceName] = useState('');
 
   const requestAccessFineLocationPermission = async () => {
     try {
@@ -56,15 +58,22 @@ export default function App() {
   };
 
   const OnPressAdvertise = () => {
-    NearbyChat.startAdvertising("My-Phone");
+    NearbyChat.startAdvertising(deviceName);
   };
 
   const OnPressDiscover = () => {
-    NearbyChat.startDiscovery("Your-Phone");
+    NearbyChat.startDiscovery(deviceName);
   };
 
   return (
     <View style={styles.container}>
+      <TextInput
+        editable
+        maxLength={40}
+        onChangeText={text => setDeviceName(text)}
+        value={deviceName}
+        placeholder="Device Name"
+      />
       <Button
         onPress={OnPressAdvertise}
         title="Advertise"
@@ -77,6 +86,9 @@ export default function App() {
         color="#841584"
         accessibilityLabel="Learn more about this purple button"
       />
+      <View>
+        <Text></Text>
+      </View>
     </View>
   );
 }
