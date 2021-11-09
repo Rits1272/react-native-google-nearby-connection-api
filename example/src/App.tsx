@@ -1,8 +1,23 @@
 import * as React from 'react';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, NativeModules, Button, PermissionsAndroid, TextInput, DeviceEventEmitter, CheckBox } from 'react-native';
+import { StyleSheet, 
+         View, 
+         Text, 
+         NativeModules, 
+         Button, 
+         PermissionsAndroid, 
+         DeviceEventEmitter, 
+         CheckBox, 
+         ScrollView, 
+         TextInput,
+         TouchableOpacity,
+         Dimensions,
+         Alert,
+         FlatList} from 'react-native';
 
 const { NearbyChat } = NativeModules;
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function App() {
 
@@ -13,11 +28,17 @@ export default function App() {
 
   const [deviceName, setDeviceName] = useState('');
   const [endpoints, setEndpoints] = useState([]);
-  const [isSelected, setSelection] = useState(false);
-  const [selectedDevices, selectDevice] = useState([]);
+  const [isSelected, setSelection] = useState([]);
+  const [isDeviceSelected, setIsDeviceSelected] = useState([]);
+  const [refresh, setRefresh] = useState();
+  const [message, setMessage] = useState("");
 
   const getEndpoints = (event) => {
     setEndpoints(event);
+    const diff = endpoints.length - isDeviceSelected.length;
+    for(let i = 0; i < diff; i++) {
+      isDeviceSelected.push(false);
+    }
     console.log(endpoints);
   };
 
@@ -79,19 +100,38 @@ export default function App() {
 
   const receiveMessage = async () => {
     const msg = await NearbyChat.getMessage();
+    Alert.alert("Received the message", msg);
     console.log("This is the msg", msg);
   }
 
   const sendMessageToSelectedDevices = () => {
-    if(selectedDevices.length>0){
-        selectedDevices.map((device) => {
-          NearbyChat.sendMessage(device.split("_")[0], "HI there from Me!");
-          console.log("Message sent!");
-        })
-    }
-    else {
-        console.log("No device selected");
-    }
+    isDeviceSelected.map((active, index) => {
+      if(active) {
+        const device = endpoints[index];
+        const deviceId = device.split("_")[0];
+        NearbyChat.sendMessage(deviceId, message);
+      }
+    });
+    setMessage("");
+  }
+
+  const toggleDeviceSelection = (index) => {
+    let active = isSelected[index];
+    let tempIsSelected = isSelected;
+    tempIsSelected[index] = !active;
+    setIsDeviceSelected(tempIsSelected);
+    setRefresh(Math.random(10000)); // a work around to rerender the endpoint list
+  }
+
+  const renderDeviceList = ({index, item}) => {
+    let color = isSelected[index] ? '#007AFF' : '#d3d3d3';
+    return (
+      <TouchableOpacity 
+        onPress={() => toggleDeviceSelection(index)}
+        style={[styles.card, { backgroundColor: color }]}>
+        <Text style={styles.deviceName} key={index}>{item.toUpperCase()}</Text>
+      </TouchableOpacity>
+    )
   }
 
   DeviceEventEmitter.addListener("endpoints", getEndpoints);
@@ -99,75 +139,107 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        editable
-        maxLength={40}
-        onChangeText={text => setDeviceName(text)}
-        value={deviceName}
-        placeholder="Device Name"
-      />
-      <Button
-        onPress={OnPressAdvertise}
-        title="Advertise"
-        color="#841584"
-        accessibilityLabel="Learn more about this purple button"
-      />
-      <Button
-        onPress={OnPressDiscover}
-        title="Discover"
-        color="#841584"
-        accessibilityLabel="Learn more about this purple button"
-      />
-      <View>
-        <Text>Available Devices</Text>
-        {
-          (endpoints.length === 0) ? <Text>No devices Available</Text> :
-            <View>
-              {
-                endpoints.map((endpoint, i) => (
-                <View>
-                <CheckBox
-                  value={isSelected}
-                  onValueChange={() => {
-                    setSelection(!isSelected);
-                    if (isSelected){
-                      selectDevice([...selectedDevices, endpoint]);
-                    } else {
-                      selectDevice(selectedDevices.filter((device) => { 
-                        return device !== endpoint; 
-                      }));
-                    }
-                    console.log(selectedDevices);
-                  }}
-                />
-                  <Text key={i}>{endpoint}</Text>
-                </View>
-              ))
-            }
+      <Text style={[styles.heading, {paddingBottom: 12, borderBottomWidth: 0.5}]}>NEARBY CHAT</Text>
+      <View style={styles.subcontainer}>
+        <View style={styles.buttonContainer}>
+          <Button title="Advertise" color="#007AFF" onPress={OnPressAdvertise}/>
+        </View>
+        <View style={styles.buttonContainer}>
+          <Button title="Discover" color="#007AFF" onPress={OnPressDiscover}/>
+        </View>
       </View>
-        }
+      <View style={styles.deviceContainer}>
+        <Text style={styles.heading}>Available Devices</Text>
+        {endpoints.length > 0 ? 
+        <ScrollView horizontal={true}>
+          {
+            endpoints.map((device, index) => {
+              const color = isSelected[index] ? 'blue': '#a9a9a9';
+              return (
+                  <TouchableOpacity 
+                    key={index} 
+                    onPress={() => toggleDeviceSelection(index)}
+                    style={[styles.card, { backgroundColor: color }]}>
+                    <Text style={styles.deviceName}>{device.toUpperCase()}</Text>
+                  </TouchableOpacity>
+                )
+            })
+          }
+        </ScrollView>
+        :
+        <Text style={styles.message}>No nearby devices found 🥺</Text>
+      }
+      </View>
+      <View style={styles.inputContainer}>
+        <TextInput 
+          style={styles.input}
+          onChangeText={text => setMessage(text)}
+          value={message}
+          placeholder="Send a message"/>
+        <Button title="Send" color="#007AFF" onPress={sendMessageToSelectedDevices} />
+      </View>
     </View>
-    <Button
-        onPress={sendMessageToSelectedDevices}
-        title="Send Message"
-        color="#841584"
-        accessibilityLabel="Learn more about this purple button"
-      />
-    </View >
   );
 }
 
-// Try to use styled components here for defining the styles.
-// https://styled-components.com/
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    marginTop: '5%',
+  },
+  subcontainer: {
+    flexDirection: 'row',
+  },
+  buttonContainer: {
+    flex: 1,
+    padding: '4%',
+    marginTop: 8,
+  },
+  deviceContainer: {
+    marginTop: 10,
+    flex: 0.5,
+  },
+  heading: {
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  text: {
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginTop: 20,
+    marginLeft: 40,
+    marginRight: 40,
+    flex: 1,
+  },
+  input: {
+    borderRadius: 5,
+    borderWidth: 0,
+    elevation: 3,
+    padding: 15,
+    marginBottom: 20,
+  },
+  card: {
+    height: 'auto',
+    width: SCREEN_WIDTH * 0.8,
+    margin: 10,
+    marginBottom: 0,
     justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    borderRadius: 5,
   },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
+  deviceName: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
   },
+  message: {
+    textAlign: 'center',
+    fontSize: 20,
+    color: 'red',
+    marginTop: 50,
+  }
 });
