@@ -98,8 +98,9 @@ export default function App() {
     console.log(endpoints);
   };
 
-  const receiveMessage = async () => {
-    const msg = await NearbyChat.getMessage();
+  const receiveMessage = (event) => {
+    const msg = event['message'];
+    console.log(msg);
     Alert.alert("Received the message", msg);
     console.log("This is the msg", msg);
   }
